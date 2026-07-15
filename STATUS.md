@@ -13,7 +13,7 @@
 | 01 | Framework, MVC & Setup Proyek | ✅ Selesai | `33aab0f` — `[P-1] inisialisasi project laravel 12` |
 | 02 | Routing & Request Lifecycle | ✅ Selesai | belum di-commit (menunggu review dosen) |
 | 03 | Controller, Request & Validation | ✅ Selesai | belum di-commit (menunggu review dosen) |
-| 04 | Blade Templating & Layout System | ⬜ Belum | - |
+| 04 | Blade Templating & Layout System | ✅ Selesai | belum di-commit (menunggu review dosen) |
 | 05 | Migration, Eloquent Model & CRUD | ⬜ Belum | - |
 | 06 | UTS | ⬜ Belum | - |
 | 07 | Eloquent Relationships | ⬜ Belum | - |
@@ -29,32 +29,32 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 ## SESI TERAKHIR
 
 **Tanggal:** 2026-07-15
-**Pertemuan yang Dikerjakan:** 3 — Controller, Request & Validation
+**Pertemuan yang Dikerjakan:** 4 — Blade Templating & Layout System
 **Dikerjakan oleh:** Claude Code
 
 ### File yang Dibuat/Diubah
-- `app/Http/Requests/StoreBookRequest.php` — dibuat via `make:request`, rules lengkap sesuai kolom tabel `books`, custom messages Bahasa Indonesia, `authorize()` → `true` (belum ada auth)
-- `app/Http/Requests/StoreCategoryRequest.php` — dibuat via `make:request`, rules untuk `nama_kategori` & `deskripsi`
-- `app/Http/Controllers/BookController.php` — semua method diisi logika nyata: `index`/`create` mengembalikan view dengan data dummy array (`$books`, `$categories` sebagai properti private), `store` pakai `StoreBookRequest` + redirect flash sukses, `update` sengaja pakai validasi **inline** (`$request->validate()`) sebagai perbandingan dengan `store`, `show`/`edit` mencari dari array dummy + `abort_if` 404, `destroy` redirect flash sukses
-- `app/Http/Controllers/CategoryController.php` — `index`, `create`, `store` diisi logika nyata (data dummy array, `store` pakai `StoreCategoryRequest` + redirect flash sukses); `edit`/`update`/`destroy` sengaja **dibiarkan dummy** (CRUD kategori lengkap baru di Pertemuan 5)
-- `resources/views/books/index.blade.php`, `create.blade.php`, `edit.blade.php`, `show.blade.php` — dibuat, HTML polos (belum pakai master layout — itu baru Pertemuan 4), sudah pakai `@csrf`, `@method`, `@error`, `old()`
-- `resources/views/categories/index.blade.php`, `create.blade.php` — dibuat dengan pola sama seperti books
-- `../modul-laravel-12/pertemuan-03.md` — dibuat lengkap sesuai template master-outline
+- `resources/views/layouts/app.blade.php` — dibuat, master layout dengan `<head>`/style bersama, `@include('partials.navbar')`, `@include('partials.alert')`, `@yield('content')`, dan footer
+- `resources/views/partials/navbar.blade.php` — dibuat, link ke `books.index`/`categories.index`/`members.index`/`loans.index`, active state pakai `request()->routeIs('resource.*')`
+- `resources/views/partials/alert.blade.php` — dibuat, komponen flash message `session('success')`
+- `resources/views/books/index.blade.php` — di-refactor dari HTML mandiri menjadi `@extends('layouts.app')` + `@section('content')`, isi tabel tidak berubah
+- `resources/views/categories/index.blade.php` — di-refactor dengan pola sama seperti books
+- `app/Http/Controllers/MemberController.php` — ditambah properti `$members` (data dummy array) dan method `index()` diisi (kembalikan `view('members.index', compact('members'))`); method `create`/`store`/`show`/`edit`/`update`/`destroy` sengaja **dibiarkan dummy** (CRUD anggota lengkap baru di Pertemuan 5)
+- `resources/views/members/index.blade.php` — dibuat baru, langsung pakai master layout sejak awal
+- `../modul-laravel-12/pertemuan-04.md` — dibuat lengkap sesuai template master-outline
 
 ### Output yang Sudah Berfungsi
 - Diuji langsung di browser (`php artisan serve`):
-  - `/books` menampilkan tabel 3 buku dummy
-  - `/books/create` submit kosong → semua field menampilkan pesan error Bahasa Indonesia; submit valid → redirect ke `/books` dengan flash message hijau
-  - `/books/{id}` (show) dan `/books/{id}/edit` menampilkan data sesuai id, dropdown kategori di form edit ter-select otomatis sesuai `category_id` buku
-  - `/books/{id}` update dan destroy → redirect ke index dengan flash message sukses
-  - `/categories` dan `/categories/create` — pola validasi & flash message sama seperti books, sudah diuji submit kosong dan submit valid
-- Route tidak berubah dari Pertemuan 2 (semua sudah terdaftar), hanya Controller & View yang diisi
+  - `/books`, `/categories`, `/members` menampilkan navbar & footer identik dari master layout, hanya konten tabel yang berbeda
+  - Menu navbar tersorot (`class="active"`) sesuai halaman yang sedang dibuka — diverifikasi lewat inspeksi DOM (`nav a.active`)
+  - Submit form `/books/create` dengan data valid → redirect ke `/books`, flash message sukses tetap tampil lewat `partials/alert.blade.php` yang di-include di layout
+  - `/members` menampilkan 3 anggota dummy (Siti Aminah, Budi Santoso, Dewi Lestari) dengan kolom status
 
 ### Catatan Sesi
-- Data buku/kategori masih **array dummy** di dalam Controller (bukan dari database) — sesuai rencana karena Migration & Model Eloquent baru dibuat di Pertemuan 5. Setiap flash message sukses eksplisit menyebutkan "data dummy, belum tersimpan ke database" supaya jelas ke mahasiswa bahwa perubahan tidak persisten.
-- View sengaja **belum pakai master layout** (`@extends`, `@section`) — itu baru dibangun di Pertemuan 4. Untuk saat ini tiap view adalah file HTML mandiri dengan style inline minimal.
-- Tombol "Hapus" awalnya diberi `onclick="confirm(...)"` tapi dihapus karena JS `confirm()` bukan bagian dari materi P3 dan sempat memblokir automated testing di browser tool.
-- `MemberController`, `StoreMemberRequest`, dan view `members/` sengaja **tidak dikerjakan** — itu adalah Tugas mandiri mahasiswa untuk pertemuan ini, mengikuti pola persis yang sudah dicontohkan di `BookController`.
+- `books/create.blade.php`, `books/edit.blade.php`, `books/show.blade.php`, dan `categories/create.blade.php` **belum di-refactor** ke master layout — itu sengaja dijadikan Tugas mandiri mahasiswa untuk pertemuan ini, mengikuti pola refactor `index.blade.php` yang sudah dicontohkan di praktikum.
+- `MemberController@create/store/edit/update/destroy` masih mengembalikan string dummy (peninggalan Pertemuan 2) — CRUD anggota lengkap baru dikerjakan di Pertemuan 5 setelah Migration & Model Eloquent tersedia. Hanya `index()` yang diisi di pertemuan ini supaya ketiga resource (books/categories/members) bisa didemonstrasikan memakai master layout yang sama.
+- Alat screenshot browser tool sempat timeout saat verifikasi visual; verifikasi tetap dilakukan lewat `get_page_text`, `read_page`, dan `javascript_tool` (cek `document.querySelector('nav a.active')`) yang semuanya berhasil mengonfirmasi layout, data, dan active state bekerja benar.
+- Domain email dummy anggota diubah dari `@kampus.ac.id` (generik) menjadi `@pens.ac.id` sesuai domain kampus pengguna, di `MemberController.php` dan `pertemuan-04.md`. Pakai domain ini juga untuk data dummy/seed email di pertemuan-pertemuan berikutnya (mis. `UserSeeder` di Pertemuan 8, `MemberFactory` di Pertemuan 10).
+- Atas permintaan dosen, bagian **Konsep** dan **Materi** di `pertemuan-04.md` diperdalam signifikan (353 → 423 baris) karena Blade dianggap materi fundamental yang wajib benar-benar dipahami, bukan cuma dihafal. Penambahan meliputi: 2 paragraf baru di Konsep (akar historis PHP sebagai bahasa templating & alasan MVC, argumen "keterbatasan Blade sebagai fitur yang disengaja"); subbab baru "Blade Bukan Sihir: Hasil Kompilasi di Balik Layar" (menunjukkan hasil kompilasi `@if`/`@foreach` jadi PHP polos); contoh serangan XSS konkret di bagian Echo Aman vs Raw; tabel lengkap semua properti `$loop`; subbab baru "Urutan Eksekusi" yang menjelaskan child-view diproses dulu baru parent-layout (kesalahpahaman paling umum soal `@extends`/`@yield`); subbab baru "Kesalahan Umum Pemula". Fitur-fitur Blade yang lebih niche (components, stacks, custom directive) sengaja **tidak dibahas** — cakupan dibatasi ke fundamental yang benar-benar dipakai di praktikum, sisanya diarahkan ke referensi resmi Laravel.
 
 ---
 
@@ -76,7 +76,7 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 ### Controllers (Web)
 - [x] BookController (semua method logika nyata + data dummy array — CRUD sungguhan mulai Pertemuan 5)
 - [x] CategoryController (`index`/`create`/`store` logika nyata; `edit`/`update`/`destroy` masih dummy — lengkap di Pertemuan 5)
-- [ ] MemberController (kerangka resource, return dummy — logika nyata jadi Tugas Pertemuan 3)
+- [x] MemberController (`index` logika nyata + data dummy array; `create`/`store`/`show`/`edit`/`update`/`destroy` masih dummy — CRUD lengkap di Pertemuan 5)
 - [x] LoanController (kerangka resource + method `kembalikan`, return dummy)
 - [ ] AuthController
 - [ ] DashboardController
@@ -88,14 +88,14 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - [ ] Api/StatsController
 
 ### Views
-- [ ] layouts/app.blade.php
-- [ ] partials/navbar.blade.php
-- [ ] partials/alert.blade.php
+- [x] layouts/app.blade.php
+- [x] partials/navbar.blade.php
+- [x] partials/alert.blade.php
 - [ ] auth/login.blade.php
 - [ ] dashboard.blade.php
-- [x] books/ (index, create, edit, show) — HTML polos, belum pakai master layout
-- [ ] categories/ (index, create) dibuat; edit belum ada view (Controller masih dummy)
-- [ ] members/ (index, create, edit, show)
+- [x] books/ (index pakai master layout; create, edit, show masih HTML polos — Tugas P4)
+- [x] categories/ (index pakai master layout; create masih HTML polos — Tugas P4; edit belum ada view, Controller masih dummy)
+- [x] members/ (index pakai master layout, data dummy; create, edit, show belum ada — CRUD lengkap di Pertemuan 5)
 - [ ] loans/ (index, create, show, report)
 
 ### Fitur
@@ -116,7 +116,7 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - [x] pertemuan-01.md
 - [x] pertemuan-02.md
 - [x] pertemuan-03.md
-- [ ] pertemuan-04.md
+- [x] pertemuan-04.md
 - [ ] pertemuan-05.md
 - [ ] pertemuan-06.md
 - [ ] pertemuan-07.md
@@ -129,12 +129,15 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 
 ## TARGET SESI BERIKUTNYA
 
-**Pertemuan:** 4 — Blade Templating & Layout System
+**Pertemuan:** 5 — Migration, Eloquent Model & CRUD
 **Yang perlu dikerjakan:**
-- Buat `layouts/app.blade.php` (master layout dengan navbar & footer), `partials/navbar.blade.php`, `partials/alert.blade.php`
-- Refactor `books/index.blade.php`, buat `categories/index.blade.php` versi layout, dan `members/index.blade.php` supaya semua pakai `@extends`/`@section`/`@include`
-- Data masih dummy dari Controller (belum Eloquent — itu Pertemuan 5)
-- Generate `../modul-laravel-12/pertemuan-04.md`
+- Buat migration untuk semua 6 tabel (`categories`, `books`, `members`, `users` role, `loans`, `loan_items`) dengan urutan parent-child yang benar
+- Buat Model `Category`, `Book`, `Member`, `Loan`, `LoanItem` dengan `$fillable` lengkap
+- Ganti seluruh data dummy array di `BookController` dan `CategoryController` dengan query Eloquent (`all()`, `find()`, `create()`, `update()`, `delete()`)
+- Tambahkan `paginate()` di halaman index books & categories
+- CRUD `categories` dan `books` selesai lengkap dengan data nyata dari database
+- Generate `../modul-laravel-12/pertemuan-05.md`
+- Tugas mahasiswa: CRUD lengkap `members` (lanjutan dari `index()` yang sudah diisi di Pertemuan 4) + fitur search nama anggota
 
 ---
 
