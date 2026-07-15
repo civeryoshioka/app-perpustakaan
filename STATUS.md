@@ -11,7 +11,7 @@
 | # | Pertemuan | Status | Commit Terakhir |
 |---|---|---|---|
 | 01 | Framework, MVC & Setup Proyek | ✅ Selesai | `33aab0f` — `[P-1] inisialisasi project laravel 12` |
-| 02 | Routing & Request Lifecycle | ⬜ Belum | - |
+| 02 | Routing & Request Lifecycle | ✅ Selesai | belum di-commit (menunggu review dosen) |
 | 03 | Controller, Request & Validation | ⬜ Belum | - |
 | 04 | Blade Templating & Layout System | ⬜ Belum | - |
 | 05 | Migration, Eloquent Model & CRUD | ⬜ Belum | - |
@@ -29,25 +29,26 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 ## SESI TERAKHIR
 
 **Tanggal:** 2026-07-15
-**Pertemuan yang Dikerjakan:** 1 — Framework, MVC & Setup Proyek
+**Pertemuan yang Dikerjakan:** 2 — Routing & Request Lifecycle
 **Dikerjakan oleh:** Claude Code
 
 ### File yang Dibuat/Diubah
-- `app-perpustakaan/` (project Laravel 12) — dibuat via `composer create-project laravel/laravel`
-- `.env` — dikonfigurasi ke MySQL, `DB_DATABASE=db_perpustakaan`
-- Git — repo di-init, remote `origin` diarahkan ke `https://github.com/civeryoshioka/app-perpustakaan.git`, branch `main` dan `dev` sudah dibuat dan di-push
-- `CLAUDE.md`, `STATUS.md` — dibuat di root project (oleh user)
-- `../modul-laravel-12/pertemuan-01.md` — dibuat lengkap (konsep framework & MVC, materi struktur direktori, praktikum, tugas)
+- `app/Http/Controllers/BookController.php` — dibuat via `--resource`, semua method return string dummy
+- `app/Http/Controllers/CategoryController.php` — dibuat via `--resource`, semua method return string dummy, **method `show()` dihapus** (categories tidak punya halaman detail, sesuai struktur view di `CLAUDE.md`)
+- `app/Http/Controllers/MemberController.php` — dibuat via `--resource`, semua method return string dummy
+- `app/Http/Controllers/LoanController.php` — dibuat via `--resource`, semua method return string dummy + method tambahan `kembalikan()`
+- `routes/web.php` — ditambahkan `Route::resource()` untuk `books`, `members`, `loans` (7 route) dan `categories` dengan `->except(['show'])` (6 route), plus route custom `PUT /loans/{id}/kembalikan`
+- `.env` — `SESSION_DRIVER` diubah dari `database` ke `file` (lihat Catatan Sesi)
+- `../modul-laravel-12/pertemuan-02.md` — dibuat lengkap, kemudian direvisi menambahkan sub-topik "Resource Route Parsial (`->only()`/`->except()`)" dan "Route Manual Satu per Satu" atas permintaan user, dengan `categories` sebagai contoh nyata di project
 
 ### Output yang Sudah Berfungsi
-- Project berjalan di `http://127.0.0.1:8000` menampilkan halaman welcome default Laravel
-- Branch `dev` aktif dan up to date dengan `origin/dev`
-- Commit checkpoint `[P-1] inisialisasi project laravel 12` sudah ter-push
+- `php artisan route:list` menampilkan 7 route untuk `books`/`members`/`loans`, 6 route untuk `categories` (tanpa `show`), + `loans.kembalikan` — total 28 route custom
+- Diuji di browser: `/books`, `/categories`, `/members`, `/loans`, `/books/3` menampilkan string dummy yang sesuai; `/categories/3` (GET) mengembalikan `405 Method Not Allowed` sesuai perilaku Laravel saat URI dikenali tapi method tidak terdaftar
 
 ### Catatan Sesi
-- Belum ada Model/Controller/Route kustom — masih struktur default Laravel (`User` model, `Controller.php` kosong, route `/` return `welcome`). Ini sesuai karena Pertemuan 1 baru sebatas setup, routing & controller baru dimulai Pertemuan 2–3.
-- Database `db_perpustakaan` sudah dikonfigurasi di `.env` tapi migration belum dijalankan (baru Pertemuan 5).
-- `CLAUDE.md` dan `STATUS.md` belum ter-commit ke branch `dev` (masih untracked) — perlu di-add saat commit checkpoint pertemuan berikutnya, atau di-commit terpisah oleh dosen.
+- Belum ada Model/Migration/View — sesuai karena baru dijadwalkan Pertemuan 4–5.
+- Route belum diproteksi middleware `auth` — itu baru masuk di Pertemuan 8, sesuai desain modul.
+- `SESSION_DRIVER` diubah permanen dari `database` ke `file` di `.env` karena tabel `sessions` belum ada (migration baru Pertemuan 5) dan sebelumnya menyebabkan semua route error 500 saat diakses browser. Sudah diverifikasi berfungsi normal. Boleh dikembalikan ke `database` setelah migration Pertemuan 5 selesai jika diinginkan.
 
 ---
 
@@ -67,10 +68,10 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - [ ] User (default Laravel)
 
 ### Controllers (Web)
-- [ ] BookController
-- [ ] CategoryController
-- [ ] MemberController
-- [ ] LoanController
+- [x] BookController (kerangka resource, return dummy — logika nyata mulai Pertemuan 3)
+- [x] CategoryController (kerangka resource, return dummy — logika nyata mulai Pertemuan 3)
+- [x] MemberController (kerangka resource, return dummy — logika nyata mulai Pertemuan 3)
+- [x] LoanController (kerangka resource + method `kembalikan`, return dummy)
 - [ ] AuthController
 - [ ] DashboardController
 
@@ -107,7 +108,7 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 
 ### Markdown Modul
 - [x] pertemuan-01.md
-- [ ] pertemuan-02.md
+- [x] pertemuan-02.md
 - [ ] pertemuan-03.md
 - [ ] pertemuan-04.md
 - [ ] pertemuan-05.md
@@ -122,19 +123,19 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 
 ## TARGET SESI BERIKUTNYA
 
-**Pertemuan:** 2 — Routing & Request Lifecycle
+**Pertemuan:** 3 — Controller, Request & Validation
 **Yang perlu dikerjakan:**
-- Route resource untuk `books`, `categories`, `members`, `loans` di `routes/web.php`
-- Controller kosong untuk masing-masing resource (return string dummy)
-- Verifikasi `php artisan route:list` menampilkan semua route dengan benar
-- Generate `../modul-laravel-12/pertemuan-02.md`
+- `BookController` semua method (index return view dengan data dummy array), `CategoryController` dengan `index` dan `store` + validasi
+- `StoreBookRequest` dan `StoreCategoryRequest` sebagai Form Request
+- Tampilkan error validasi di view
+- Generate `../modul-laravel-12/pertemuan-03.md`
 
 ---
 
 ## CATATAN PENTING LINTAS SESI
 
-*Diisi Claude Code jika ada hal penting yang perlu diingat di sesi berikutnya*
-*Contoh: "Migration pertemuan 5 belum menambahkan foreign key, perlu dilakukan di pertemuan 7"*
+- `.env` awalnya memakai `SESSION_DRIVER=database` (default Laravel 12), tapi tabel `sessions` belum ada karena migration baru dijalankan di Pertemuan 5 — ini menyebabkan **semua** route error 500 (`Base table or view not found: sessions`) saat `php artisan serve` dijalankan dan diakses browser. Mahasiswa menemukan masalah ini saat mencoba `php artisan serve` setelah Pertemuan 2 selesai.
+- **Perbaikan diterapkan:** `SESSION_DRIVER` diubah permanen ke `file` di `.env` (baris 30) agar tidak bergantung pada tabel database yang belum ada. Sudah diverifikasi: `php artisan serve` + akses `/books`, `/` dsb sekarang mengembalikan HTTP 200 normal. Boleh dikembalikan ke `database` setelah migration Pertemuan 5 selesai, kalau memang diinginkan — tapi `file` juga valid dipakai seterusnya karena project ini tidak butuh session terdistribusi.
 
 ---
 
