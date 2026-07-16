@@ -99,6 +99,17 @@ timestamps
 
 ---
 
+## REFERENSI STUDI KASUS UNTUK MAHASISWA
+
+Ada file `../modul-laravel-12/studi-kasus-database.md` — dokumentasi studi kasus, desain tabel, dan relasi yang ditulis untuk dibaca **mahasiswa** (bukan untuk Claude Code baca sebagai acuan kerja). Isinya adalah versi turunan dari bagian DESAIN DATABASE dan ELOQUENT RELATIONSHIPS di bawah ini, ditulis ulang lebih rapi dan lebih banyak penjelasan supaya mudah dipahami mahasiswa.
+
+**Aturan sumber kebenaran (WAJIB diikuti supaya tidak bingung):**
+- `master-outline.md` (khususnya section E "Desain Database" dan F "Relasi Antar Tabel") dan bagian DESAIN DATABASE/ELOQUENT RELATIONSHIPS di file ini **tetap satu-satunya acuan kerja** — kalau butuh info skema tabel atau relasi untuk mengerjakan pertemuan manapun, selalu baca dari sini, **jangan pernah** dari `studi-kasus-database.md`.
+- `studi-kasus-database.md` murni untuk mahasiswa. Kalau desain database di sini berubah, generate ulang isinya supaya tetap sinkron — tapi jangan jadikan itu tempat mengecek "desain sebenarnya seperti apa".
+- `pertemuan-01.md` dan `pertemuan-05.md` sudah link ke file ini sebagai referensi ringkas (P1) dan detail (P5) — pertemuan baru yang butuh merujuk desain database/relasi cukup tambahkan link serupa, tidak perlu menulis ulang tabelnya.
+
+---
+
 ## ELOQUENT RELATIONSHIPS
 
 ```php
