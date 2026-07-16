@@ -20,7 +20,7 @@
 | 08 | Authentication & Middleware | ✅ Selesai | belum di-commit (menunggu review dosen) |
 | 09 | REST API Dasar | ✅ Selesai | belum di-commit (menunggu review dosen) |
 | 10 | Blade + Konsumsi API & Project Clinic | ✅ Selesai | belum di-commit (menunggu review dosen) |
-| 11 | UAS | ⬜ Belum | - |
+| 11 | UAS | ✅ Selesai | belum di-commit (menunggu review dosen) |
 
 Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 
@@ -29,10 +29,27 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 ## SESI TERAKHIR
 
 **Tanggal:** 2026-07-16
-**Pertemuan yang Dikerjakan:** 10 — Blade + Konsumsi API & Project Clinic
+**Pertemuan yang Dikerjakan:** 11 — UAS
 **Dikerjakan oleh:** Claude Code
 
 ### File yang Dibuat/Diubah
+- `../modul-laravel-12/pertemuan-11.md` — dibuat baru: rubrik dan instruksi penilaian UAS (tanpa kode), format mengikuti pola `pertemuan-06.md` (UTS) tapi disesuaikan untuk demo live + tanya jawab sesuai bagian I master-outline — berisi skenario demo 11 langkah (dielaborasi per langkah, bukan cuma daftar poin outline), 12 pertanyaan tanya jawab konseptual mencakup P1–P10, rubrik penilaian 5 aspek dengan rincian poin per indikator, skala konversi nilai, dan catatan untuk dosen penilai
+
+### Output yang Sudah Berfungsi
+- Rubrik UAS lengkap dan siap dipakai dosen untuk sesi demo — tidak ada kode Laravel baru ditulis (sesuai instruksi eksplisit sesi ini)
+
+### Catatan Sesi — Verifikasi Kondisi Project Sebelum Menulis Rubrik
+Sebelum menulis rubrik, dilakukan scan langsung ke `app-perpustakaan/app-perpustakaan/` (bukan cuma percaya catatan sesi lalu) untuk memastikan rubrik dan catatan-untuk-dosen di `pertemuan-11.md` akurat:
+- **Tugas P10 (merge `dev`→`main`, `DEMO.md`, update `README.md`) TERNYATA BELUM DIKERJAKAN** — `git log main` masih berhenti di `[P-1] inisialisasi project laravel 12`, branch `dev` masih 9 commit di depan (`git log main..dev` menunjukkan P2 s.d. P10 belum ter-merge). Tidak ada file `DEMO.md`. `README.md` masih README default Laravel, belum diupdate soal instruksi 2 server. **Ini prasyarat penting supaya demo UAS lancar** — sudah dicatat sebagai item wajib di bagian "Sebelum Demo" `pertemuan-11.md`, tapi perlu diingatkan langsung ke mahasiswa sebelum jadwal demo karena belum dikerjakan sampai sesi ini ditulis.
+- **Semua Tugas mandiri lintas pertemuan juga masih belum dikerjakan**, dikonfirmasi lewat `grep`/`find` langsung ke kode (bukan cuma baca checklist lama): `LoanController@kembalikan` versi web masih stub (`return "LoanController@kembalikan, id: {$id}"`, belum ada logic asli), tidak ditemukan badge status berwarna di `resources/views/loans/*.blade.php`, tidak ada fitur search di `MemberController`, tidak ada file/route terkait halaman profil atau ganti password, tidak ada file dokumentasi tabel API. Konsisten dengan checklist "Fitur" yang sudah tercatat di bagian bawah file ini — tidak ada perubahan status, murni verifikasi ulang.
+- Karena Tugas mandiri "kembalikan buku" versi web belum ada, rubrik `pertemuan-11.md` sengaja mengizinkan mahasiswa mendemokan pengembalian buku lewat endpoint API (`PUT /api/loans/{id}/kembalikan`, sudah berfungsi penuh sejak P9) sebagai pengganti langkah 8 skenario demo, supaya mahasiswa yang belum sempat mengerjakan Tugas mandiri itu tidak otomatis kehilangan poin Aspek 1 (Fungsionalitas CRUD) — sudah ditulis eksplisit di bagian "Sebelum Demo" dan "Catatan untuk Dosen Penilai".
+- Commit message di repository nyata (`P10 - Blade + Konsumsi API & Project Clinic`, dst) **tidak mengikuti format `[P-X] deskripsi indonesia`** yang jadi konvensi wajib (kecuali commit pertama `33aab0f`). Ini di luar cakupan sesi ini untuk diperbaiki (tidak ada instruksi commit ulang/rewrite history), tapi relevan diketahui dosen penilai saat mengecek Aspek 5 (Repository GitHub) — indikator "commit checkpoint rapi" di rubrik menilai kesesuaian isi, bukan format persis nama tag, jadi ini tidak otomatis jadi pengurang nilai besar, tapi konvensi commit message tetap bagian dari kriteria "rapi".
+- **[Lanjutan sesi ini] Dua dari tiga item Tugas P10 sudah dikerjakan filenya, TAPI BELUM DI-COMMIT (sengaja, permintaan langsung):**
+  - `README.md` ditulis ulang total (sebelumnya masih README default Laravel) — sekarang berisi deskripsi project, instalasi, instruksi wajib 2 server (port 8010/8011) beserta alasan teknis deadlock, kredensial login hasil seeding, daftar fitur, dan tabel endpoint API
+  - `DEMO.md` dibuat baru — naskah demo UAS: persiapan sebelum demo, 11 langkah demo dengan data/kredensial nyata, dan bagian troubleshooting
+  - **Merge `dev` → `main` SENGAJA BELUM DILAKUKAN** — ditanyakan dulu ke user karena aksi ini menghasilkan git commit, dan CLAUDE.md eksplisit melarang commit otomatis ("dosen yang akan review dan commit"). User memutuskan ditunda ("biarkan saja bro sementara"). **Di sesi mendatang, jangan asumsikan merge ini sudah terjadi** — cek ulang `git log main..dev` dulu seperti di sesi ini, jangan percaya catatan lama begitu saja.
+
+### File Sebelumnya (Sesi P10 — untuk referensi)
 - `app/Http/Controllers/DashboardController.php` — dibuat baru: `index()` memanggil `GET /api/stats` lewat `Http::get()`, fallback ke angka `0` kalau response gagal
 - `resources/views/dashboard.blade.php` — dibuat baru: 3 kartu statistik (Total Buku, Total Anggota, Peminjaman Aktif) + link ke halaman laporan
 - `resources/views/layouts/app.blade.php` — ditambah CSS `.stats-grid`/`.stat-card` untuk kartu statistik dashboard
@@ -58,8 +75,11 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - **[Revisi setelah temuan lanjutan]** `database/factories/BookFactory.php` — ditulis ulang: judul buku dikurasi manual per kategori (bukan `fake()->words()` yang menghasilkan Lorem gibberish tanpa peduli locale), penerbit dikurasi dari daftar penerbit Indonesia asli (Gramedia, Mizan, dst — bukan `fake()->company()` yang generik), `category_id` sekarang diambil dulu baru judul dipilih dari pool sesuai kategori itu (bukan independen)
 - **[Revisi setelah temuan lanjutan]** `database/factories/MemberFactory.php` — ditulis ulang: nama dari `fake()->firstName().' '.fake()->lastName()` (bukan `fake()->name()`, supaya tidak ikut kebawa gelar seperti "S.IP"), email dibentuk manual dari `Str::slug($nama)` + angka acak + domain `@pens.ac.id` (bukan `fake()->safeEmail()` yang menghasilkan domain generik)
 - **[Revisi setelah temuan lanjutan]** `database/seeders/UserSeeder.php` — nama 3 user diganti dari label generik ("Admin Perpustakaan", "Petugas Satu", "Petugas Dua") jadi nama orang Indonesia asli ("Bambang Sutrisno", "Siti Rahmawati", "Ahmad Fauzi"); email (`admin@pens.ac.id` dst) tidak berubah
+- **[Revisi setelah temuan lanjutan]** `resources/views/vendor/pagination/custom.blade.php` — dibuat baru: view pagination custom murni teks/link (`« Sebelumnya`, nomor halaman, `Berikutnya »`), tanpa ikon SVG atau class Tailwind
+- **[Revisi setelah temuan lanjutan]** `app/Providers/AppServiceProvider.php` — ditambah `Paginator::defaultView('vendor.pagination.custom')` di `boot()`, supaya SEMUA pemanggilan `->links()` di seluruh project (books, members, categories, loans index) otomatis pakai view custom ini
+- **[Revisi setelah temuan lanjutan]** `resources/views/layouts/app.blade.php` — ditambah CSS `.pagination` untuk styling pagination custom
 
-### Output yang Sudah Berfungsi
+### Output yang Sudah Berfungsi (Sesi P10)
 - `php artisan migrate:fresh --seed` — seluruh 5 Seeder (`UserSeeder`, `CategorySeeder`, `BookSeeder`, `MemberSeeder`, `LoanSeeder`) berhasil jalan berurutan tanpa error, termasuk setelah revisi data Indonesia (di-re-seed ulang untuk verifikasi)
 - Diuji langsung di browser (bukan cuma dibaca kodenya), login sebagai `admin@pens.ac.id`:
   - Login berhasil, navbar menampilkan nama "Bambang Sutrisno" (bukan lagi label generik "Admin Perpustakaan") → redirect ke `/` (Dashboard), bukan lagi ke `/books`
@@ -69,9 +89,10 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
   - Halaman Laporan Peminjaman (`/loans/report`) menampilkan 10 transaksi lengkap dengan nama anggota, petugas (Bambang Sutrisno/Siti Rahmawati/Ahmad Fauzi), daftar buku per transaksi, dan status — diambil sungguhan dari `GET /api/loans`
   - Navbar menampilkan link Dashboard dan Laporan dengan benar, active state berfungsi
   - **Fallback ConnectionException diuji langsung:** server kedua (port 8011) dimatikan sengaja sementara server utama tetap jalan → Dashboard tetap tampil (statistik 0, bukan error 500) dan Laporan Peminjaman tetap tampil ("Belum ada data peminjaman.", bukan error 500) — membuktikan `try/catch` di kedua Controller benar-benar menangkap kegagalan koneksi total, bukan cuma respons berstatus gagal
+  - **Pagination custom diuji langsung:** halaman `/books` dan `/members` (masing-masing 2 halaman data) menampilkan pagination berupa teks/link bersih (`« Sebelumnya`, `1`, `2`, `Berikutnya »`) — bukan lagi ikon SVG raksasa tak berstyle. Link nomor halaman & "Berikutnya »" diklik, berhasil pindah halaman dan menampilkan data baris 11-20. Di halaman terakhir, "Berikutnya »" otomatis tidak lagi jadi link (nonaktif), begitu juga "« Sebelumnya" di halaman pertama
   - Regresi dicek: `/books`, `/members`, `/categories` masih normal setelah semua perubahan routing
 
-### Catatan Sesi
+### Catatan Sesi (P10)
 - **Temuan teknis penting — deadlock server saat consume API internal:** percobaan pertama memakai `Http::get(url('/api/stats'))` (memanggil balik ke port server yang sama) langsung membuat halaman Dashboard hang tanpa henti. Penyebabnya: `php artisan serve` di Windows memproses **satu request per waktu** (fitur multi-worker-nya, `PHP_CLI_SERVER_WORKERS`, butuh `fork()` yang cuma tersedia di Unix — sudah diverifikasi langsung lewat test sintetis, env var itu tidak berpengaruh apa-apa di Windows). Request luar (Dashboard) menunggu balasan dari request dalam (`/api/stats`), padahal request dalam itu tidak akan pernah diproses selama server masih sibuk menangani request luar — deadlock sempurna.
 - **Solusi yang diterapkan:** menjalankan **dua** instance `php artisan serve` di port berbeda — server utama (port sesuai `launch.json`, di sesi ini `8010`) untuk trafik browser, server kedua (`8011`, key `INTERNAL_API_URL` / `config('services.internal_api.base_url')`) khusus dipanggil dari `DashboardController` dan `LoanController@report`. Kedua instance menjalankan kode dan database yang sama, cuma proses PHP-nya berbeda sehingga tidak saling mengunci. `.claude/launch.json` sudah diupdate menambah config kedua ini — kalau menjalankan preview di sesi mendatang, **jalankan kedua server** (`laravel-perpustakaan` dan `laravel-perpustakaan-internal-api`), bukan cuma yang pertama.
 - **Ini bukan sekadar workaround sesi ini** — sudah didokumentasikan penuh di `pertemuan-10.md` bagian Konsep dan Materi sebagai bagian dari pembelajaran (kenapa server dev berbeda dari server produksi), dan instruksi 2-server ini juga masuk ke Tugas P10 (update `README.md` project). Mahasiswa yang mengerjakan sendiri di laptop Windows kemungkinan besar akan mengalami hal yang sama.
@@ -80,6 +101,7 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - **Data lama dari sesi-sesi sebelumnya (P7, P9) sudah hilang** karena `migrate:fresh --seed` menghapus total database sebelum seeding — ini memang tujuan Seeder (dataset bersih dan konsisten), bukan kehilangan data yang tidak disengaja. Kalau butuh data spesifik dari sesi lama, harus dibuat ulang manual.
 - **Revisi setelah sesi awal P10 — bug `ConnectionException` ditemukan lewat percakapan dengan dosen:** implementasi awal `DashboardController`/`LoanController@report` cuma cek `$response->successful()`, TIDAK menangkap kasus server kedua (port 8011) mati total. `Http::get()` ternyata melempar `ConnectionException` (bukan mengembalikan `Response` gagal) kalau tujuan sama sekali tidak bisa dihubungi — exception ini tidak tertangkap, jadi klaim "fallback ke angka 0" di dokumentasi awal sebenarnya salah, yang terjadi justru error 500. Sudah diperbaiki dengan membungkus `Http::get()` pakai `try/catch (ConnectionException $e)` di kedua Controller, dan sudah diuji ulang langsung (matikan server 8011, refresh Dashboard & Laporan, keduanya tetap tampil normal dengan data kosong).
 - **Revisi setelah sesi awal P10 — data seeder diganti total ke identitas Indonesia** (permintaan langsung): `APP_FAKER_LOCALE` di `.env` diubah ke `id_ID` (sebelumnya `en_US`, sempat didokumentasikan sebagai "sengaja dibiarkan" di catatan sesi awal — keputusan itu sudah tidak berlaku, silakan abaikan kalau masih terbaca di riwayat sebelumnya). `BookFactory` judul & penerbit dikurasi manual (bukan Faker Lorem/company generik), `MemberFactory` nama + email `@pens.ac.id` dikurasi manual, `UserSeeder` nama diganti dari label generik jadi nama orang asli. Sudah diverifikasi langsung di browser (`/books`, `/members`, `/loans/report` semua nama Indonesia, konsisten kategori).
+- **Bug ditemukan & diperbaiki (di luar cakupan literal P10) — pagination bawaan Laravel tampil rusak:** dilaporkan pengguna lewat screenshot — halaman `/members` (dan seluruhnya yang pakai `->links()`: books, categories, loans index) menampilkan ikon panah SVG raksasa tak berstyle alih-alih pagination normal. Penyebab: view pagination default Laravel (`tailwind`) memakai ikon SVG + class Tailwind untuk mengatur ukuran/tampilannya, tapi project ini **tidak pernah memuat Tailwind CSS** (cuma CSS custom polos di `layouts/app.blade.php` sejak Pertemuan 4) — SVG jadi tampil di ukuran native-nya yang sangat besar karena tidak ada class yang membatasi. Perbaikan: dibuat view pagination custom murni teks/link (`resources/views/vendor/pagination/custom.blade.php`) dan didaftarkan sebagai default lewat `Paginator::defaultView(...)` di `AppServiceProvider::boot()` — otomatis berlaku ke SEMUA pagination di project tanpa perlu ubah tiap Blade file satu-satu. Sudah diuji ulang di `/books` dan `/members`, pindah halaman berfungsi normal.
 
 ---
 
@@ -122,6 +144,7 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - [x] categories/ (index pakai master layout; create, edit masih HTML polos; CRUD lengkap dengan data nyata)
 - [x] members/ (index pakai master layout, data nyata dari database; create, edit, show dibuat Pertemuan 7 — show menampilkan riwayat peminjaman lewat relasi)
 - [x] loans/ (index pakai master layout; create, show, edit HTML polos — dibuat lengkap Pertemuan 7; `report.blade.php` dibuat Pertemuan 10, konsumsi `GET /api/loans`)
+- [x] vendor/pagination/custom.blade.php (dibuat Pertemuan 10 revisi — view pagination custom teks/link, didaftarkan default lewat `Paginator::defaultView()` di `AppServiceProvider`, menggantikan view `tailwind` bawaan yang rusak tampilannya karena project tidak pakai Tailwind CSS)
 
 ### Fitur
 - [x] CRUD Categories (data nyata dari database, pagination)
@@ -150,19 +173,24 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - [x] pertemuan-08.md
 - [x] pertemuan-09.md
 - [x] pertemuan-10.md
-- [ ] pertemuan-11.md
+- [x] pertemuan-11.md — rubrik dan instruksi penilaian UAS (tanpa kode), demo live 11 langkah + tanya jawab
 - [x] studi-kasus-database.md — referensi studi kasus & desain database untuk mahasiswa (bukan "pertemuan", file mandiri)
+- [x] tambahan/n-plus-1-query-problem.md — pendalaman N+1 Query Problem (sudah ada sejak sebelum sesi ini, sekarang baru dicantumkan di README.md)
+- [x] tambahan/git-github-dasar.md — materi tambahan baru: dasar Git & GitHub (setup, 3 area kerja, perintah yang sering dipakai, branch, `.gitignore`, konvensi commit) — permintaan langsung, ditaruh di luar urutan pertemuan karena mengasumsikan mahasiswa mungkin belum pernah pakai Git sama sekali
+- [x] README.md (`modul-laravel-12/`) — ditambah section "Persiapan Sebelum Memulai": pengetahuan prasyarat + tabel software wajib (PHP, Composer, MySQL, Node.js, Git, code editor, Postman, akun GitHub), link balik ke `tambahan/git-github-dasar.md`
+- **[Diskusi lanjutan sesi ini] Section "Repository Kode" di README.md (`modul-laravel-12/`) DIHAPUS** atas permintaan langsung — sebelumnya berisi placeholder link "Project referensi" ke repo `app-perpustakaan` yang belum diisi URL asli (`[USERNAME]`), tapi berpotensi jadi celah kalau nanti diisi: mahasiswa bisa clone langsung solusi lengkap alih-alih mengerjakan sendiri. Sudah di-scan ulang seluruh `modul-laravel-12/` (grep pola `github.com`/`USERNAME`) — satu-satunya sisa referensi GitHub adalah `pertemuan-01.md:173` (`git remote add origin https://github.com/[USERNAME]/...`), itu aman karena instruksi supaya mahasiswa hubungkan repo GitHub **milik mereka sendiri**, bukan tautan ke solusi referensi — sengaja dibiarkan.
+- [x] tambahan/glosarium.md — dibuat baru: daftar istilah framework-agnostic diurutkan sesuai urutan kemunculan P1–P10 (bukan alfabetis), tiap istilah ditautkan ke pertemuan tempat pertama dibahas, plus 1 baris silang-referensi ke `git-github-dasar.md` dan `n-plus-1-query-problem.md` untuk istilah yang sudah punya pendalaman terpisah
+- [x] studi-kasus-database.md — ditambah diagram ER pakai sintaks **Mermaid** (`erDiagram`) di bagian "Relasi Antar Tabel", sebagai pengganti rencana `assets/erd-perpustakaan.png` di `master-outline.md` bagian B (PNG statis tidak pernah dibuat). Mermaid dipilih karena render otomatis jadi diagram visual di GitHub tanpa perlu file gambar terpisah, dan lebih gampang di-maintain (teks, bukan binary) kalau skema tabel berubah di masa depan — `master-outline.md` bagian B sudah diupdate mengganti referensi `assets/erd-perpustakaan.png` dengan struktur folder `tambahan/` yang sekarang benar-benar ada isinya
 
 ---
 
 ## TARGET SESI BERIKUTNYA
 
-**Pertemuan:** 11 — UAS
-**Yang perlu dikerjakan:**
-- Pertemuan ini rubrik dan instruksi penilaian saja (format sama seperti P6/UTS), **tidak ada kode baru** — cukup generate `../modul-laravel-12/pertemuan-11.md` sesuai bagian I master-outline (skenario demo 11 langkah + tabel kriteria penilaian)
-- Sebelum sesi ini, pastikan Tugas P10 (merge `dev` ke `main`, `DEMO.md`, update `README.md` dua-server) sudah dicek statusnya — kalau mahasiswa belum mengerjakan, ingatkan karena ini prasyarat demo UAS berjalan mulus (server API internal di port 8011 wajib jalan bersamaan supaya Dashboard & Laporan tidak kosong)
-- Cek ulang kondisi project scan aktual sesuai instruksi wajib CLAUDE.md — kemungkinan mahasiswa sudah mengerjakan sebagian Tugas mandiri yang masih tercatat belum selesai di bagian "Fitur" di atas (kembalikan buku versi web, badge status, search anggota, profil+ganti password, dokumentasi API)
-- **Penting:** kalau perlu menjalankan preview untuk verifikasi apa pun di sesi UAS, jalankan **dua** server sesuai `.claude/launch.json` (`laravel-perpustakaan` port 8010 dan `laravel-perpustakaan-internal-api` port 8011) — Dashboard dan Laporan Peminjaman akan gagal/kosong kalau cuma satu yang jalan, lihat Catatan Penting Lintas Sesi soal deadlock server
+**Seluruh 11 pertemuan modul (`pertemuan-01.md` s.d. `pertemuan-11.md`) sudah selesai dibuat.** Tidak ada pertemuan baru terjadwal — sesi mendatang kemungkinan besar bersifat perbaikan/revisi atas materi yang sudah ada, atau membantu mahasiswa menuntaskan hal-hal berikut yang masih tercatat belum selesai:
+
+- **Tugas P10 belum dikerjakan** (dicek ulang langsung di sesi P11 lewat `git log`/`find`, bukan asumsi): branch `dev` masih 9 commit di depan `main` (belum di-merge), tidak ada `DEMO.md`, `README.md` masih default Laravel (belum ada instruksi 2 server). Ini prasyarat penting supaya demo UAS (P11) berjalan mulus — kalau sesi mendatang diminta membantu, prioritaskan ini.
+- **Tugas mandiri lintas pertemuan masih belum dikerjakan** (juga dicek ulang di sesi P11): kembalikan buku versi web (`LoanController@kembalikan` masih stub), badge status berwarna, search nama anggota, halaman profil+ganti password, dokumentasi tabel API. Lihat checklist "Fitur" di atas untuk detail per item.
+- **Penting kalau menjalankan preview untuk verifikasi apa pun:** jalankan **dua** server sesuai `.claude/launch.json` (`laravel-perpustakaan` port 8010 dan `laravel-perpustakaan-internal-api` port 8011) — Dashboard dan Laporan Peminjaman akan gagal/kosong kalau cuma satu yang jalan, lihat Catatan Penting Lintas Sesi soal deadlock server.
 
 ---
 

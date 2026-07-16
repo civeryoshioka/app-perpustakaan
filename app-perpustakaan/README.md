@@ -1,59 +1,114 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistem Perpustakaan Digital Kampus
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi manajemen perpustakaan kampus berbasis Laravel 12 — dikelola oleh admin/petugas untuk mengelola kategori buku, buku, anggota, dan transaksi peminjaman/pengembalian. Dilengkapi REST API dan halaman yang mengonsumsi API-nya sendiri (Dashboard & Laporan Peminjaman).
 
-## About Laravel
+Project ini dibangun bertahap dari Pertemuan 1 s.d. 10 mata kuliah Pemrograman Framework, dan didemokan di Pertemuan 11 (UAS). Lihat `../modul-laravel-12/` untuk materi lengkap tiap pertemuan.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Kebutuhan Sistem
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP >= 8.2
+- Composer
+- MySQL
+- Node.js & NPM (untuk build asset via Vite)
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Instalasi
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+```
 
-## Laravel Sponsors
+Sesuaikan koneksi database di `.env` (`DB_DATABASE=db_perpustakaan`, `DB_USERNAME`, `DB_PASSWORD`), lalu buat database-nya secara manual di MySQL. Setelah itu jalankan migration sekaligus seeder:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+php artisan migrate:fresh --seed
+npm run build
+```
 
-### Premium Partners
+Seeder akan mengisi 3 user (1 admin, 2 petugas), 5 kategori, 20 buku, 15 anggota, dan 10 transaksi peminjaman contoh.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+---
 
-## Contributing
+## Menjalankan Project — WAJIB 2 Server
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Aplikasi ini butuh **dua** instance `php artisan serve` berjalan bersamaan, bukan satu:
 
-## Code of Conduct
+```bash
+# Terminal 1 — server utama, untuk semua trafik browser
+php artisan serve --port=8010
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Terminal 2 — server internal, khusus dipanggil balik oleh Dashboard & Laporan
+php artisan serve --port=8011
+```
 
-## Security Vulnerabilities
+Buka aplikasi di browser lewat **port 8010** (`http://127.0.0.1:8010`).
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**Kenapa harus 2 server?** Halaman Dashboard (`/`) dan Laporan Peminjaman (`/loans/report`) mengambil datanya lewat Laravel HTTP Client (`Http::get()`) yang memanggil endpoint REST API aplikasi ini sendiri (`GET /api/stats` dan `GET /api/loans`). Server dev bawaan PHP (`php artisan serve`) di Windows hanya memproses **satu request pada satu waktu** (fitur multi-worker-nya butuh `fork()` yang tidak tersedia di Windows). Kalau server yang sama dipanggil balik oleh dirinya sendiri, request luar (Dashboard) akan menunggu selamanya request dalam (`/api/stats`) yang tidak akan pernah diproses selama server masih sibuk — deadlock permanen.
 
-## License
+Solusinya: server kedua di port 8011 (dikonfigurasi lewat `INTERNAL_API_URL` di `.env` / `config('services.internal_api.base_url')`) menjalankan kode dan database yang sama, hanya beda proses PHP, sehingga tidak saling mengunci. Kalau server kedua ini mati/tidak dijalankan, Dashboard dan Laporan tetap tampil (sudah ditangani lewat `try/catch`), tapi datanya kosong/nol — bukan error 500, tapi juga bukan kondisi yang benar untuk demo.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+> Catatan: keterbatasan ini murni karakteristik server development `php artisan serve` di Windows, bukan masalah aplikasi. Di server produksi sungguhan (Nginx/Apache + PHP-FPM), request diproses paralel secara normal sehingga kebutuhan 2 server ini tidak berlaku.
+
+---
+
+## Kredensial Login (hasil seeding)
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@pens.ac.id` | `password` |
+| Petugas | `petugas1@pens.ac.id` | `password` |
+| Petugas | `petugas2@pens.ac.id` | `password` |
+
+Route `/categories` khusus bisa diakses oleh role `admin`.
+
+---
+
+## Fitur
+
+- Autentikasi login/logout berbasis session, proteksi seluruh route CRUD dengan middleware `auth`
+- CRUD Kategori Buku, Buku (relasi kategori), Anggota Perpustakaan
+- Transaksi Peminjaman & Pengembalian Buku (relasi anggota, petugas, dan daftar buku per transaksi)
+- Dashboard statistik (total buku, anggota, peminjaman aktif) — konsumsi `GET /api/stats`
+- Halaman Laporan Peminjaman — konsumsi `GET /api/loans`
+- REST API publik (tanpa token/session) untuk `books`, `members`, `loans`, `stats`
+
+---
+
+## Endpoint REST API
+
+| Method | Endpoint | Keterangan |
+|---|---|---|
+| GET | `/api/books` | Daftar buku, filter `?judul=` & `?category_id=`, pagination |
+| GET | `/api/books/{id}` | Detail 1 buku |
+| POST | `/api/books` | Tambah buku |
+| PUT | `/api/books/{id}` | Update buku |
+| DELETE | `/api/books/{id}` | Hapus buku |
+| GET | `/api/members` | Daftar anggota, pagination |
+| GET | `/api/members/{id}` | Detail 1 anggota |
+| GET | `/api/loans` | Daftar transaksi peminjaman, pagination |
+| POST | `/api/loans` | Buat transaksi peminjaman (`user_id` wajib dikirim di body) |
+| PUT | `/api/loans/{id}/kembalikan` | Proses pengembalian buku |
+| GET | `/api/stats` | Statistik total buku, anggota, peminjaman aktif |
+
+Semua endpoint bisa diuji langsung lewat Postman ke `http://127.0.0.1:8010/api/...` (atau port 8011, keduanya menjalankan kode yang sama).
+
+---
+
+## Struktur Branch Git
+
+```
+main  ← kode stabil per checkpoint
+dev   ← pengembangan aktif
+```
+
+---
+
+## Tentang Modul
+
+Project ini adalah bagian dari modul ajar mata kuliah Pemrograman Framework — Teknik Informatika PENS. Lihat `../modul-laravel-12/` untuk materi lengkap tiap pertemuan (Pertemuan 1–11) dan `DEMO.md` untuk skenario demo UAS.
