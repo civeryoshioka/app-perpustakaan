@@ -35,4 +35,27 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Internal API Base URL
+    |--------------------------------------------------------------------------
+    |
+    | `php artisan serve` memakai PHP built-in server yang cuma memproses
+    | satu request pada satu waktu (di Windows selalu begitu, karena fitur
+    | multi-worker-nya butuh fork() yang tidak tersedia). Kalau controller
+    | web memanggil Http::get() balik ke endpoint /api/... di port yang
+    | sama, request itu akan deadlock selamanya — server sedang sibuk
+    | memproses request luar, jadi tidak bisa menerima request dalam yang
+    | ditunggu oleh request luar itu sendiri.
+    |
+    | Solusinya: jalankan instance kedua dari aplikasi yang sama di port
+    | berbeda, khusus untuk menerima panggilan API internal ini. Server
+    | utama (port aktif php artisan serve mahasiswa) tetap melayani
+    | trafik browser seperti biasa.
+    |
+    */
+    'internal_api' => [
+        'base_url' => env('INTERNAL_API_URL', 'http://127.0.0.1:8011'),
+    ],
+
 ];

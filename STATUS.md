@@ -19,7 +19,7 @@
 | 07 | Eloquent Relationships | ✅ Selesai | belum di-commit (menunggu review dosen) |
 | 08 | Authentication & Middleware | ✅ Selesai | belum di-commit (menunggu review dosen) |
 | 09 | REST API Dasar | ✅ Selesai | belum di-commit (menunggu review dosen) |
-| 10 | Blade + Konsumsi API & Project Clinic | ⬜ Belum | - |
+| 10 | Blade + Konsumsi API & Project Clinic | ✅ Selesai | belum di-commit (menunggu review dosen) |
 | 11 | UAS | ⬜ Belum | - |
 
 Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
@@ -29,44 +29,57 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 ## SESI TERAKHIR
 
 **Tanggal:** 2026-07-16
-**Pertemuan yang Dikerjakan:** 9 — REST API Dasar
+**Pertemuan yang Dikerjakan:** 10 — Blade + Konsumsi API & Project Clinic
 **Dikerjakan oleh:** Claude Code
 
 ### File yang Dibuat/Diubah
-- `bootstrap/app.php` — ditambah `api: __DIR__.'/../routes/api.php'` di `withRouting()`; Laravel 12 tidak lagi membuat/mendaftarkan `routes/api.php` otomatis di project baru, jadi ini wajib ditambah manual dulu sebelum route API bisa dikenali
-- `routes/api.php` — dibuat baru (sebelumnya tidak ada sama sekali): 11 route sesuai `master-outline.md` bagian G untuk `books` (5 route CRUD penuh), `members` (2 route GET), `loans` (POST + GET + PUT kembalikan), `stats` (1 route GET)
-- `app/Http/Controllers/Api/BookController.php` — dibuat baru lewat `make:controller Api/BookController`: `index()` (filter `?judul=`, `?category_id=`, pagination), `show()`, `store()` (pakai ulang `StoreBookRequest` dari P3, response `201`), `update()`, `destroy()`
-- `app/Http/Controllers/Api/MemberController.php` — dibuat baru: `index()` (pagination), `show()` — read-only sesuai outline, tidak ada create/update/delete untuk members di API pertemuan ini
-- `app/Http/Controllers/Api/LoanController.php` — dibuat baru: `index()`, `store()` (validasi `user_id` eksplisit dari body karena API publik, lihat Catatan Sesi), `kembalikan()` (diimplementasikan penuh, set `status` jadi `dikembalikan` + `tanggal_dikembalikan` — beda dari versi web yang masih stub Tugas P7)
-- `app/Http/Controllers/Api/StatsController.php` — dibuat baru: `index()` mengembalikan `total_buku`, `total_anggota`, `peminjaman_aktif` lewat `response()->json()` langsung (tanpa Resource, karena bukan representasi satu Model)
-- `app/Http/Resources/BookResource.php` — dibuat lewat `make:resource`, diisi field lengkap + relasi `category` ter-nested
-- `app/Http/Resources/MemberResource.php` — dibuat lewat `make:resource`, diisi kolom `members` apa adanya
-- `app/Http/Resources/LoanResource.php` — dibuat lewat `make:resource`, diisi field + relasi `member`, `user` (sebagai `petugas`), `loanItems.book` (sebagai `books`) ter-nested
-- `../modul-laravel-12/pertemuan-09.md` — dibuat baru sesuai template master-outline
+- `app/Http/Controllers/DashboardController.php` — dibuat baru: `index()` memanggil `GET /api/stats` lewat `Http::get()`, fallback ke angka `0` kalau response gagal
+- `resources/views/dashboard.blade.php` — dibuat baru: 3 kartu statistik (Total Buku, Total Anggota, Peminjaman Aktif) + link ke halaman laporan
+- `resources/views/layouts/app.blade.php` — ditambah CSS `.stats-grid`/`.stat-card` untuk kartu statistik dashboard
+- `routes/web.php` — route `/` diubah dari redirect sederhana ke `books.index` (P8) menjadi `DashboardController@index` bernama `dashboard`; ditambah route `loans.report` (didaftarkan sebelum `Route::resource('loans', ...)` supaya tidak ketangkap parameter `{loan}`)
+- `resources/views/partials/navbar.blade.php` — ditambah link "Dashboard" dan "Laporan"
+- `app/Http/Controllers/LoanController.php` — ditambah method `report()`: memanggil `GET /api/loans` lewat `Http::get()` dengan passthrough query `?page=`
+- `resources/views/loans/report.blade.php` — dibuat baru: tabel laporan peminjaman dari data API (notasi array, bukan objek Eloquent), pagination manual dari `meta.current_page`/`meta.last_page`
+- `app/Http/Controllers/AuthController.php` — redirect setelah login diubah dari `route('books.index')` ke `route('dashboard')`, menyesuaikan sekarang `/` adalah Dashboard sungguhan
+- `config/services.php` — ditambah `internal_api.base_url` (default `http://127.0.0.1:8011`) — lihat Catatan Sesi soal kenapa ini dibutuhkan
+- `.env` dan `.env.example` — ditambah `INTERNAL_API_URL=http://127.0.0.1:8011`
+- `.claude/launch.json` (di root `modul-framework/`) — ditambah konfigurasi server kedua `laravel-perpustakaan-internal-api` di port 8011
+- `app/Models/Book.php` dan `app/Models/Member.php` — ditambah trait `HasFactory` (belum ada sebelumnya, dibutuhkan supaya `Book::factory()`/`Member::factory()` bisa dipanggil dari Seeder)
+- `database/seeders/CategorySeeder.php` — dibuat baru: 5 kategori (Novel, Komik, Sains, Teknologi, Sejarah), pakai `updateOrCreate()` supaya idempoten
+- `database/factories/BookFactory.php` — dibuat baru: judul/penulis/penerbit dari Faker, `category_id` random dari kategori yang sudah ada
+- `database/seeders/BookSeeder.php` — dibuat baru: `Book::factory()->count(20)->create()`
+- `database/factories/MemberFactory.php` — dibuat baru: nama/nim/email/alamat dari Faker
+- `database/seeders/MemberSeeder.php` — dibuat baru: `Member::factory()->count(15)->create()`
+- `database/seeders/LoanSeeder.php` — dibuat baru: 10 transaksi manual (bukan Factory) karena butuh `tanggal_dikembalikan` konsisten dengan `status`, plus insert `loan_items` lewat relasi
+- `database/seeders/DatabaseSeeder.php` — orkestrasi urutan: `UserSeeder` → `CategorySeeder` → `BookSeeder` → `MemberSeeder` → `LoanSeeder`
+- `../modul-laravel-12/pertemuan-10.md` — dibuat baru sesuai template master-outline, termasuk penjelasan konsep deadlock server (lihat Catatan Sesi)
+- **[Revisi setelah temuan lanjutan]** `app/Http/Controllers/DashboardController.php` dan `app/Http/Controllers/LoanController.php` — ditambah `try/catch (ConnectionException $e)` membungkus `Http::get()`, karena `$response->successful()` saja tidak cukup: kalau server internal (port 8011) mati total, `Http::get()` melempar `ConnectionException` sebelum sempat sampai ke pengecekan `successful()`, menyebabkan error 500 alih-alih fallback yang dimaksud
+- **[Revisi setelah temuan lanjutan]** `.env` dan `.env.example` — `APP_FAKER_LOCALE` diubah dari `en_US` ke `id_ID` (permintaan langsung) supaya `fake()->name()`/`fake()->address()` di seluruh Factory otomatis menghasilkan data bergaya Indonesia
+- **[Revisi setelah temuan lanjutan]** `database/factories/BookFactory.php` — ditulis ulang: judul buku dikurasi manual per kategori (bukan `fake()->words()` yang menghasilkan Lorem gibberish tanpa peduli locale), penerbit dikurasi dari daftar penerbit Indonesia asli (Gramedia, Mizan, dst — bukan `fake()->company()` yang generik), `category_id` sekarang diambil dulu baru judul dipilih dari pool sesuai kategori itu (bukan independen)
+- **[Revisi setelah temuan lanjutan]** `database/factories/MemberFactory.php` — ditulis ulang: nama dari `fake()->firstName().' '.fake()->lastName()` (bukan `fake()->name()`, supaya tidak ikut kebawa gelar seperti "S.IP"), email dibentuk manual dari `Str::slug($nama)` + angka acak + domain `@pens.ac.id` (bukan `fake()->safeEmail()` yang menghasilkan domain generik)
+- **[Revisi setelah temuan lanjutan]** `database/seeders/UserSeeder.php` — nama 3 user diganti dari label generik ("Admin Perpustakaan", "Petugas Satu", "Petugas Dua") jadi nama orang Indonesia asli ("Bambang Sutrisno", "Siti Rahmawati", "Ahmad Fauzi"); email (`admin@pens.ac.id` dst) tidak berubah
 
 ### Output yang Sudah Berfungsi
-- Semua endpoint diuji langsung lewat request nyata ke server `php artisan serve` (bukan cuma dibaca kodenya), pakai `fetch()` di browser karena Postman tidak tersedia di lingkungan sesi ini:
-  - `GET /api/books` — pagination benar (`data`, `links`, `meta`), relasi `category` ter-nested
-  - `GET /api/books?judul=bumi` — filter judul (LIKE, partial match) berfungsi, hanya buku cocok yang muncul
-  - `POST /api/books` — status `201`, buku baru langsung tampil di `GET /api/books`
-  - `POST /api/books` dengan body kosong — status `422`, `errors` berisi pesan per field (custom messages dari `StoreBookRequest` ikut terpakai)
-  - `PUT /api/books/{id}` — status `200`, perubahan tersimpan
-  - `DELETE /api/books/{id}` — status `200`
-  - `GET /api/books/999` (id tidak ada) — status `404` otomatis dari `findOrFail()`
-  - `GET /api/members` dan `GET /api/members/{id}` — pagination dan detail anggota benar
-  - `GET /api/loans` — daftar transaksi lengkap dengan `member`, `petugas`, dan array `books` per transaksi
-  - `POST /api/loans` — status `201`, transaksi baru dengan banyak `book_ids` sekaligus tersimpan sebagai beberapa baris `loan_items`
-  - `PUT /api/loans/{id}/kembalikan` — status `200`, `status` berubah jadi `dikembalikan` dan `tanggal_dikembalikan` terisi tanggal hari ini
-  - `GET /api/stats` — tiga angka statistik sesuai jumlah data aktual di database
-  - Halaman web (`/login`, dll) dicek ulang setelah `bootstrap/app.php` diubah — dipastikan tidak ada regresi, masih berjalan normal
+- `php artisan migrate:fresh --seed` — seluruh 5 Seeder (`UserSeeder`, `CategorySeeder`, `BookSeeder`, `MemberSeeder`, `LoanSeeder`) berhasil jalan berurutan tanpa error, termasuk setelah revisi data Indonesia (di-re-seed ulang untuk verifikasi)
+- Diuji langsung di browser (bukan cuma dibaca kodenya), login sebagai `admin@pens.ac.id`:
+  - Login berhasil, navbar menampilkan nama "Bambang Sutrisno" (bukan lagi label generik "Admin Perpustakaan") → redirect ke `/` (Dashboard), bukan lagi ke `/books`
+  - Dashboard menampilkan 20 Total Buku, 15 Total Anggota, 1 Peminjaman Aktif — sesuai data hasil seeding, diambil sungguhan dari `GET /api/stats`
+  - Halaman `/books` — judul & penulis semua nama Indonesia asli, konsisten dengan kategorinya (contoh: "Dasar-Dasar Termodinamika" masuk kategori Sains, "Cantik Itu Luka" masuk Novel), penerbit dari daftar kurasi (Erlangga, Rajawali Pers, Mizan, dst)
+  - Halaman `/members` — nama anggota Indonesia asli (contoh: "Bakijan Palastri", "Samiah Hasanah"), email berformat `nama.belakang###@pens.ac.id`, semuanya unik
+  - Halaman Laporan Peminjaman (`/loans/report`) menampilkan 10 transaksi lengkap dengan nama anggota, petugas (Bambang Sutrisno/Siti Rahmawati/Ahmad Fauzi), daftar buku per transaksi, dan status — diambil sungguhan dari `GET /api/loans`
+  - Navbar menampilkan link Dashboard dan Laporan dengan benar, active state berfungsi
+  - **Fallback ConnectionException diuji langsung:** server kedua (port 8011) dimatikan sengaja sementara server utama tetap jalan → Dashboard tetap tampil (statistik 0, bukan error 500) dan Laporan Peminjaman tetap tampil ("Belum ada data peminjaman.", bukan error 500) — membuktikan `try/catch` di kedua Controller benar-benar menangkap kegagalan koneksi total, bukan cuma respons berstatus gagal
+  - Regresi dicek: `/books`, `/members`, `/categories` masih normal setelah semua perubahan routing
 
 ### Catatan Sesi
-- **Bug ditemukan & diperbaiki saat pengujian:** respons `POST /api/loans` awalnya menampilkan `status: null` alih-alih `"dipinjam"` pada transaksi yang baru dibuat. Penyebabnya, `Loan::create()` mengembalikan objek Eloquent di memori yang belum tahu nilai default kolom `status` yang diisi otomatis oleh MySQL saat insert (`->default('dipinjam')` di migration) — `$loan->load(['member', 'user', ...])` cuma me-refresh relasi, bukan atribut Model itu sendiri. Data di database sebenarnya sudah benar (`status` tersimpan `dipinjam`), hanya response JSON dari request create pertama yang salah tampil. Diperbaiki dengan menambahkan `$loan->refresh()` sebelum di-load ke `LoanResource` di `Api/LoanController@store`.
-- **API sengaja dibiarkan publik (tanpa proteksi token/session) di pertemuan ini** — dicek dulu sesuai catatan target sesi sebelumnya di STATUS.md: middleware `auth` dari P8 berbasis session browser dan tidak otomatis berlaku untuk `routes/api.php`. Outline `master-outline.md` bagian I (Pertemuan 9) tidak menyebutkan Sanctum/token auth sama sekali di sub-topik materinya, jadi diputuskan API tetap publik untuk pertemuan ini — proteksi API token adalah topik di luar cakupan modul, sengaja tidak ditambahkan sendiri di luar outline.
-- **Konsekuensi dari API publik: `user_id` di `POST /api/loans` wajib dikirim eksplisit di body**, tidak bisa diambil dari `auth()->id()` seperti versi web, karena kolom `loans.user_id` adalah FK NOT NULL dan tidak ada session yang bisa dijadikan sumber identitas petugas saat API diakses tanpa login. Ini keputusan desain sesi ini, didokumentasikan juga di `pertemuan-09.md`.
-- **`LoanController@kembalikan` versi web (non-API) tetap dibiarkan stub** — masih Tugas mandiri Pertemuan 7 yang belum dikerjakan mahasiswa, tidak disentuh sesi ini. Versi **API**-nya (`Api\LoanController@kembalikan`) sebaliknya diimplementasikan penuh karena eksplisit diminta sebagai output praktikum P9 di outline — dua endpoint ini sengaja berbeda status penyelesaiannya untuk saat ini.
-- **Data uji baru tersimpan nyata di database dari pengujian sesi ini** (mengikuti pola sesi-sesi sebelumnya, tidak dihapus): 2 transaksi peminjaman baru (id 4 dan 5, anggota Siti Aminah) dari uji `POST /api/loans`, dan 1 transaksi lama (id 3) yang statusnya berubah jadi `dikembalikan` dari uji `PUT /api/loans/{id}/kembalikan`. Kalau butuh database bersih untuk demo, jalankan `php artisan migrate:fresh --seed`.
-- **Struktur folder project ternyata bertingkat:** project Laravel sesungguhnya ada di `app-perpustakaan/app-perpustakaan/` (bukan langsung di `app-perpustakaan/`), ditemukan saat scan folder di awal sesi ini sesuai instruksi wajib CLAUDE.md. Perlu diperhatikan di sesi-sesi berikutnya supaya tidak salah path.
+- **Temuan teknis penting — deadlock server saat consume API internal:** percobaan pertama memakai `Http::get(url('/api/stats'))` (memanggil balik ke port server yang sama) langsung membuat halaman Dashboard hang tanpa henti. Penyebabnya: `php artisan serve` di Windows memproses **satu request per waktu** (fitur multi-worker-nya, `PHP_CLI_SERVER_WORKERS`, butuh `fork()` yang cuma tersedia di Unix — sudah diverifikasi langsung lewat test sintetis, env var itu tidak berpengaruh apa-apa di Windows). Request luar (Dashboard) menunggu balasan dari request dalam (`/api/stats`), padahal request dalam itu tidak akan pernah diproses selama server masih sibuk menangani request luar — deadlock sempurna.
+- **Solusi yang diterapkan:** menjalankan **dua** instance `php artisan serve` di port berbeda — server utama (port sesuai `launch.json`, di sesi ini `8010`) untuk trafik browser, server kedua (`8011`, key `INTERNAL_API_URL` / `config('services.internal_api.base_url')`) khusus dipanggil dari `DashboardController` dan `LoanController@report`. Kedua instance menjalankan kode dan database yang sama, cuma proses PHP-nya berbeda sehingga tidak saling mengunci. `.claude/launch.json` sudah diupdate menambah config kedua ini — kalau menjalankan preview di sesi mendatang, **jalankan kedua server** (`laravel-perpustakaan` dan `laravel-perpustakaan-internal-api`), bukan cuma yang pertama.
+- **Ini bukan sekadar workaround sesi ini** — sudah didokumentasikan penuh di `pertemuan-10.md` bagian Konsep dan Materi sebagai bagian dari pembelajaran (kenapa server dev berbeda dari server produksi), dan instruksi 2-server ini juga masuk ke Tugas P10 (update `README.md` project). Mahasiswa yang mengerjakan sendiri di laptop Windows kemungkinan besar akan mengalami hal yang sama.
+- **Redirect login diubah dari `books.index` ke `dashboard`** (`AuthController@login`) — perubahan di luar cakupan literal outline P10, tapi perlu supaya UX konsisten: sejak Dashboard sungguhan ada, wajar landing page setelah login mengarah ke sana, bukan lagi ke daftar buku peninggalan sebelum Dashboard dibuat.
+- **`Book` dan `Member` model awalnya tidak punya trait `HasFactory`** — baru ketahuan saat `BookSeeder` dijalankan pertama kali dan error `BadMethodCallException: Call to undefined method App\Models\Book::factory()`. Ditambahkan ke kedua Model. `Category` dan `Loan` tidak butuh trait ini karena tidak dipakai lewat Factory (Category diisi manual di Seeder, Loan ditulis manual di `LoanSeeder`).
+- **Data lama dari sesi-sesi sebelumnya (P7, P9) sudah hilang** karena `migrate:fresh --seed` menghapus total database sebelum seeding — ini memang tujuan Seeder (dataset bersih dan konsisten), bukan kehilangan data yang tidak disengaja. Kalau butuh data spesifik dari sesi lama, harus dibuat ulang manual.
+- **Revisi setelah sesi awal P10 — bug `ConnectionException` ditemukan lewat percakapan dengan dosen:** implementasi awal `DashboardController`/`LoanController@report` cuma cek `$response->successful()`, TIDAK menangkap kasus server kedua (port 8011) mati total. `Http::get()` ternyata melempar `ConnectionException` (bukan mengembalikan `Response` gagal) kalau tujuan sama sekali tidak bisa dihubungi — exception ini tidak tertangkap, jadi klaim "fallback ke angka 0" di dokumentasi awal sebenarnya salah, yang terjadi justru error 500. Sudah diperbaiki dengan membungkus `Http::get()` pakai `try/catch (ConnectionException $e)` di kedua Controller, dan sudah diuji ulang langsung (matikan server 8011, refresh Dashboard & Laporan, keduanya tetap tampil normal dengan data kosong).
+- **Revisi setelah sesi awal P10 — data seeder diganti total ke identitas Indonesia** (permintaan langsung): `APP_FAKER_LOCALE` di `.env` diubah ke `id_ID` (sebelumnya `en_US`, sempat didokumentasikan sebagai "sengaja dibiarkan" di catatan sesi awal — keputusan itu sudah tidak berlaku, silakan abaikan kalau masih terbaca di riwayat sebelumnya). `BookFactory` judul & penerbit dikurasi manual (bukan Faker Lorem/company generik), `MemberFactory` nama + email `@pens.ac.id` dikurasi manual, `UserSeeder` nama diganti dari label generik jadi nama orang asli. Sudah diverifikasi langsung di browser (`/books`, `/members`, `/loans/report` semua nama Indonesia, konsisten kategori).
 
 ---
 
@@ -78,9 +91,9 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - [x] Tabel yang sudah ada: `users` (+ kolom `role`), `categories`, `books`, `members`, `loans`, `loan_items`, plus tabel bawaan Laravel (`cache`, `jobs`, `sessions`, dst)
 
 ### Models
-- [x] Book (`$fillable` lengkap, relationship `category()` + `loanItems()` — selesai Pertemuan 7)
+- [x] Book (`$fillable` lengkap, relationship `category()` + `loanItems()` — selesai Pertemuan 7; trait `HasFactory` ditambah Pertemuan 10)
 - [x] Category (`$fillable` lengkap, relationship `books()` — selesai Pertemuan 7)
-- [x] Member (`$fillable` lengkap, relationship `loans()` — selesai Pertemuan 7)
+- [x] Member (`$fillable` lengkap, relationship `loans()` — selesai Pertemuan 7; trait `HasFactory` ditambah Pertemuan 10)
 - [x] Loan (`$fillable` lengkap, relationship `member()` + `user()` + `loanItems()` — selesai Pertemuan 7)
 - [x] LoanItem (`$fillable` lengkap, relationship `loan()` + `book()` — selesai Pertemuan 7)
 - [x] User (default Laravel, ditambah `role` ke `$fillable`, relationship `loans()` — selesai Pertemuan 7)
@@ -89,9 +102,9 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - [x] BookController (CRUD lengkap pakai Eloquent + pagination + eager loading `category` — selesai Pertemuan 5, eager loading ditambah Pertemuan 7)
 - [x] CategoryController (CRUD lengkap pakai Eloquent + pagination — selesai Pertemuan 5)
 - [x] MemberController (CRUD lengkap pakai Eloquent + pagination — selesai Pertemuan 7; fitur search nama anggota dari Tugas P5 masih belum dikerjakan)
-- [x] LoanController (CRUD lengkap pakai Eloquent + eager loading relasi — selesai Pertemuan 7; `store()` diubah Pertemuan 8 pakai `auth()->id()`; method `kembalikan` sengaja masih stub, Tugas mandiri Pertemuan 7)
-- [x] AuthController (`showLogin`, `login`, `logout` — selesai Pertemuan 8)
-- [ ] DashboardController (route `/` masih redirect sederhana ke `/books`, dashboard sungguhan baru Pertemuan 10)
+- [x] LoanController (CRUD lengkap pakai Eloquent + eager loading relasi — selesai Pertemuan 7; `store()` diubah Pertemuan 8 pakai `auth()->id()`; `report()` ditambah Pertemuan 10 konsumsi `GET /api/loans`; method `kembalikan` versi web sengaja masih stub, Tugas mandiri Pertemuan 7)
+- [x] AuthController (`showLogin`, `login`, `logout` — selesai Pertemuan 8; redirect setelah login diubah ke `dashboard` Pertemuan 10)
+- [x] DashboardController (`index()` konsumsi `GET /api/stats` lewat Laravel HTTP Client — selesai Pertemuan 10, route `/` sekarang mengarah ke sini)
 
 ### Controllers (API)
 - [x] Api/BookController (CRUD lengkap + filter judul/category_id + pagination — selesai Pertemuan 9)
@@ -100,31 +113,31 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - [x] Api/StatsController (total_buku, total_anggota, peminjaman_aktif — selesai Pertemuan 9)
 
 ### Views
-- [x] layouts/app.blade.php
-- [x] partials/navbar.blade.php
+- [x] layouts/app.blade.php (ditambah CSS `.stats-grid`/`.stat-card` Pertemuan 10)
+- [x] partials/navbar.blade.php (ditambah link Dashboard dan Laporan Pertemuan 10)
 - [x] partials/alert.blade.php
 - [x] auth/login.blade.php (dibuat Pertemuan 8, halaman mandiri tanpa master layout)
-- [ ] dashboard.blade.php
+- [x] dashboard.blade.php (dibuat Pertemuan 10, konsumsi `GET /api/stats`)
 - [x] books/ (index pakai master layout; create, edit, show masih HTML polos — refactor ke master layout tetap tugas P4 yang belum dikerjakan mahasiswa; index & show sekarang menampilkan nama kategori lewat relasi)
 - [x] categories/ (index pakai master layout; create, edit masih HTML polos; CRUD lengkap dengan data nyata)
 - [x] members/ (index pakai master layout, data nyata dari database; create, edit, show dibuat Pertemuan 7 — show menampilkan riwayat peminjaman lewat relasi)
-- [x] loans/ (index pakai master layout; create, show, edit HTML polos — dibuat lengkap Pertemuan 7; belum ada `report.blade.php`, itu baru masuk Pertemuan 10)
+- [x] loans/ (index pakai master layout; create, show, edit HTML polos — dibuat lengkap Pertemuan 7; `report.blade.php` dibuat Pertemuan 10, konsumsi `GET /api/loans`)
 
 ### Fitur
 - [x] CRUD Categories (data nyata dari database, pagination)
 - [x] CRUD Books (data nyata dari database, dropdown kategori nyata, pagination, nama kategori tampil lewat relasi + eager loading — selesai Pertemuan 7)
 - [x] CRUD Members (data nyata dari database, pagination — selesai Pertemuan 7; fitur search nama anggota dari Tugas P5 masih belum dikerjakan)
 - [x] CRUD Loans (dengan relasi member/user/loanItems.book, eager loading — selesai Pertemuan 7)
-- [ ] Fitur kembalikan buku (Tugas mandiri Pertemuan 7, method masih stub)
+- [ ] Fitur kembalikan buku versi web (Tugas mandiri Pertemuan 7, method masih stub; versi API sudah berfungsi penuh sejak Pertemuan 9)
 - [ ] Badge status peminjaman berwarna (Tugas mandiri Pertemuan 7)
-- [x] Autentikasi login/logout (selesai Pertemuan 8)
+- [x] Autentikasi login/logout (selesai Pertemuan 8; redirect setelah login diarahkan ke Dashboard sejak Pertemuan 10)
 - [x] Middleware auth (proteksi seluruh route CRUD — selesai Pertemuan 8)
 - [x] Middleware CheckAdminRole (membatasi kelola Kategori khusus admin — selesai Pertemuan 8)
 - [ ] Halaman profil petugas + ganti password (Tugas mandiri Pertemuan 8)
 - [x] REST API endpoints (books CRUD lengkap, members read-only, loans store+kembalikan, stats — selesai Pertemuan 9; sengaja tanpa proteksi token/session, lihat Catatan Sesi P9)
-- [ ] Dashboard + statistik dari API
-- [ ] Halaman laporan dari API
-- [ ] Seeder & Factory (UserSeeder selesai Pertemuan 8; CategorySeeder, BookSeeder+Factory, MemberSeeder+Factory, LoanSeeder baru Pertemuan 10)
+- [x] Dashboard + statistik dari API (selesai Pertemuan 10, konsumsi `GET /api/stats` lewat Laravel HTTP Client)
+- [x] Halaman laporan dari API (selesai Pertemuan 10, `loans/report.blade.php` konsumsi `GET /api/loans`)
+- [x] Seeder & Factory (UserSeeder selesai Pertemuan 8; CategorySeeder, BookSeeder+Factory, MemberSeeder+Factory, LoanSeeder selesai Pertemuan 10, diorkestrasi lewat `DatabaseSeeder`)
 
 ### Markdown Modul
 - [x] pertemuan-01.md (sekarang juga link ke `studi-kasus-database.md`)
@@ -136,7 +149,7 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - [x] pertemuan-07.md
 - [x] pertemuan-08.md
 - [x] pertemuan-09.md
-- [ ] pertemuan-10.md
+- [x] pertemuan-10.md
 - [ ] pertemuan-11.md
 - [x] studi-kasus-database.md — referensi studi kasus & desain database untuk mahasiswa (bukan "pertemuan", file mandiri)
 
@@ -144,14 +157,12 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 
 ## TARGET SESI BERIKUTNYA
 
-**Pertemuan:** 10 — Blade + Konsumsi API & Project Clinic
+**Pertemuan:** 11 — UAS
 **Yang perlu dikerjakan:**
-- Buat `DashboardController` dan `dashboard.blade.php` — route `/` (saat ini masih redirect sederhana ke `/books` sejak P8) diarahkan ke controller ini, menampilkan statistik dari `GET /api/stats` lewat Laravel HTTP Client (`Http::get()`)
-- Buat `loans/report.blade.php` — halaman laporan peminjaman yang mengonsumsi `GET /api/loans`
-- Buat Seeder & Factory: `CategorySeeder` (5 kategori), `BookSeeder` + `BookFactory` (20 buku dummy), `MemberSeeder` + `MemberFactory` (15 anggota dummy), `LoanSeeder` (10 transaksi dummy); update `DatabaseSeeder` untuk mengorkestrasi urutan seeding (`UserSeeder` sudah ada dari P8)
-- Generate `../modul-laravel-12/pertemuan-10.md` sesuai template master-outline
-- Catatan penting: karena `Http::get()` di Pertemuan 10 memanggil `/api/...` dari dalam server Laravel yang sama, pastikan base URL API yang dipanggil konsisten dengan environment (`config('app.url')` atau host+port aktual saat `php artisan serve` dijalankan) — bukan hardcode `127.0.0.1:8000` kalau ternyata port yang dipakai beda (sesi P9 memakai port 8010 lewat `.claude/launch.json`)
-- Tugas mandiri yang masih belum dikerjakan sampai sesi ini (cek kondisi aktual dulu, mahasiswa mungkin sudah menyelesaikan sebagian sebelum sesi berikutnya): fitur "kembalikan buku" versi web + badge status berwarna (Tugas P7), search anggota (Tugas P5), halaman profil + ganti password (Tugas P8), dokumentasi endpoint API (Tugas P9)
+- Pertemuan ini rubrik dan instruksi penilaian saja (format sama seperti P6/UTS), **tidak ada kode baru** — cukup generate `../modul-laravel-12/pertemuan-11.md` sesuai bagian I master-outline (skenario demo 11 langkah + tabel kriteria penilaian)
+- Sebelum sesi ini, pastikan Tugas P10 (merge `dev` ke `main`, `DEMO.md`, update `README.md` dua-server) sudah dicek statusnya — kalau mahasiswa belum mengerjakan, ingatkan karena ini prasyarat demo UAS berjalan mulus (server API internal di port 8011 wajib jalan bersamaan supaya Dashboard & Laporan tidak kosong)
+- Cek ulang kondisi project scan aktual sesuai instruksi wajib CLAUDE.md — kemungkinan mahasiswa sudah mengerjakan sebagian Tugas mandiri yang masih tercatat belum selesai di bagian "Fitur" di atas (kembalikan buku versi web, badge status, search anggota, profil+ganti password, dokumentasi API)
+- **Penting:** kalau perlu menjalankan preview untuk verifikasi apa pun di sesi UAS, jalankan **dua** server sesuai `.claude/launch.json` (`laravel-perpustakaan` port 8010 dan `laravel-perpustakaan-internal-api` port 8011) — Dashboard dan Laporan Peminjaman akan gagal/kosong kalau cuma satu yang jalan, lihat Catatan Penting Lintas Sesi soal deadlock server
 
 ---
 
@@ -170,7 +181,11 @@ Status: ⬜ Belum | 🔄 Sebagian | ✅ Selesai
 - **Update Pertemuan 9 — `routes/api.php` didaftarkan manual:** Laravel 12 tidak membuat `routes/api.php` otomatis di project baru (beda dari versi sebelumnya) — file ini baru ada mulai sesi ini, dan `bootstrap/app.php` ditambah `api: __DIR__.'/../routes/api.php'` di `withRouting()`. Kalau di sesi mendatang route API terasa tidak kebaca sama sekali, cek dulu baris ini ada atau tidak.
 - **Update Pertemuan 9 — REST API sengaja publik, tanpa token/session auth**, karena outline `master-outline.md` bagian I (P9) tidak menyebutkan Sanctum/token auth di sub-topiknya. Konsekuensinya, `POST /api/loans` butuh `user_id` dikirim eksplisit di body (tidak bisa pakai `auth()->id()` seperti versi web) karena kolom `loans.user_id` NOT NULL dan tidak ada session di request API. Kalau di sesi mendatang API perlu diproteksi (misalnya lewat Sanctum), ini perubahan besar di luar cakupan P9 — pertimbangkan matang dulu sebelum menambah.
 - **Update Pertemuan 9 — `Api\LoanController@kembalikan` sudah berfungsi penuh** (beda dari `LoanController@kembalikan` versi web yang masih stub, Tugas mandiri P7 yang belum dikerjakan mahasiswa). Kalau mahasiswa akhirnya mengerjakan Tugas P7, logikanya bisa dicontoh dari versi API ini.
-- **Update Pertemuan 9 — data uji baru di database:** 2 transaksi peminjaman baru (id 4, id 5 — anggota Siti Aminah) dari pengujian `POST /api/loans`, dan 1 transaksi lama (id 3) yang statusnya diubah jadi `dikembalikan` dari pengujian `PUT /api/loans/{id}/kembalikan`. Data ini nyata tersimpan, sengaja tidak dihapus mengikuti pola sesi-sesi sebelumnya. Kalau butuh database bersih untuk demo, jalankan `php artisan migrate:fresh` (Seeder resmi untuk books/members/loans baru dibuat Pertemuan 10).
+- **Update Pertemuan 9 — data uji baru di database:** 2 transaksi peminjaman baru (id 4, id 5 — anggota Siti Aminah) dari pengujian `POST /api/loans`, dan 1 transaksi lama (id 3) yang statusnya diubah jadi `dikembalikan` dari pengujian `PUT /api/loans/{id}/kembalikan`. Data ini nyata tersimpan, sengaja tidak dihapus mengikuti pola sesi-sesi sebelumnya. **Sudah tidak relevan lagi mulai Pertemuan 10** — database sudah di-reset total lewat `migrate:fresh --seed` dan sekarang berisi data Seeder/Factory.
+- **Update Pertemuan 10 — WAJIB dua server `php artisan serve` berjalan bersamaan** supaya Dashboard dan Laporan Peminjaman berfungsi: server utama (port sesuai `launch.json`, `8010` di lingkungan Claude Code ini) untuk trafik browser, server kedua (`8011`, config `services.internal_api.base_url` / env `INTERNAL_API_URL`) khusus dipanggil `DashboardController` dan `LoanController@report` lewat `Http::get()`. Penyebabnya: `php artisan serve` cuma memproses satu request per waktu (di Windows, fitur `PHP_CLI_SERVER_WORKERS` untuk multi-worker tidak berfungsi sama sekali karena butuh `fork()` yang cuma ada di Unix — sudah diverifikasi lewat test langsung), jadi kalau controller web memanggil balik ke port yang sama, terjadi deadlock permanen (server menunggu dirinya sendiri). `.claude/launch.json` sudah diupdate menambah config server kedua ini — **di sesi mendatang manapun yang perlu preview browser, jalankan KEDUA config**, bukan cuma `laravel-perpustakaan`.
+- **Update Pertemuan 10 — data lama dari P7/P9 sudah hilang** karena `migrate:fresh --seed` menghapus total database. Database sekarang berisi: 3 User (dari `UserSeeder`), 5 Category, 20 Book, 15 Member, 10 Loan — semua dari Seeder/Factory Pertemuan 10. Kalau butuh reset ulang untuk demo, jalankan lagi `php artisan migrate:fresh --seed`.
+- **Update Pertemuan 10 (revisi) — seluruh data dummy sekarang berbahasa/identitas Indonesia:** `APP_FAKER_LOCALE=id_ID` di `.env`, judul buku & penerbit dikurasi manual per kategori (`BookFactory`), nama & email `@pens.ac.id` anggota dikurasi manual (`MemberFactory`), nama 3 user petugas diganti jadi nama asli (`UserSeeder`: Bambang Sutrisno/Siti Rahmawati/Ahmad Fauzi, email tidak berubah). Kalau ada catatan sesi P10 versi sebelumnya yang menyebut data masih Faker `en_US`/Lorem generik, itu sudah tidak berlaku.
+- **Update Pertemuan 10 (revisi) — `DashboardController` dan `LoanController@report` sekarang pakai `try/catch (ConnectionException $e)`** membungkus `Http::get()`, bukan cuma cek `$response->successful()`. Kalau di sesi mendatang menambah pemanggilan `Http::get()` internal lain (ke `services.internal_api.base_url`), ikuti pola yang sama — cek `successful()` untuk response gagal, tangkap `ConnectionException` untuk kegagalan koneksi total (server kedua mati), dua kasus ini beda dan harus ditangani terpisah.
 
 ---
 

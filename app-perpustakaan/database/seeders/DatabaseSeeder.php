@@ -12,10 +12,20 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      */
+    /**
+     * Urutan seeding wajib: UserSeeder dan CategorySeeder dulu (tidak
+     * bergantung tabel lain), baru BookSeeder (butuh categories) dan
+     * MemberSeeder, terakhir LoanSeeder (butuh users, members, books
+     * semuanya sudah ada untuk dipilih relasinya).
+     */
     public function run(): void
     {
         $this->call([
             UserSeeder::class,
+            CategorySeeder::class,
+            BookSeeder::class,
+            MemberSeeder::class,
+            LoanSeeder::class,
         ]);
     }
 }
